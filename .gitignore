@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Config (contains secret API key) - copy config.example.json to config.json
+config.json
+
+# Generated data (fetched from Jellyfin)
+posters/
+library.json
+library.prev.json
+
+# Generated output (PDFs + previews)
+output/
