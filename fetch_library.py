@@ -23,15 +23,21 @@ def load_config():
     if cfg.get("api_key", "").startswith("YOUR_API_KEY"):
         print("[ERROR] API key not configured in config.json", file=sys.stderr)
         sys.exit(1)
+    if not cfg.get("user_id"):
+        print("[ERROR] user_id not set in config.json", file=sys.stderr)
+        sys.exit(1)
     return cfg
+
+
+def auth_headers(cfg):
+    return {"Authorization": f'MediaBrowser Token="{cfg["api_key"]}"'}
 
 
 def api_get(cfg, path, params=None):
     if params is None:
         params = {}
-    params["api_key"] = cfg["api_key"]
     url = cfg["server_url"] + path
-    r = requests.get(url, params=params, timeout=30)
+    r = requests.get(url, params=params, headers=auth_headers(cfg), timeout=30)
     r.raise_for_status()
     return r.json()
 
@@ -67,9 +73,9 @@ def download_poster(cfg, item_id, dest_path):
     if os.path.exists(dest_path) and os.path.getsize(dest_path) > 0:
         return True
     url = f"{cfg['server_url']}/Items/{item_id}/Images/Primary"
-    params = {"api_key": cfg["api_key"], "maxWidth": cfg.get("poster_width", 500)}
+    params = {"maxWidth": cfg.get("poster_width", 500)}
     try:
-        r = requests.get(url, params=params, timeout=30)
+        r = requests.get(url, params=params, headers=auth_headers(cfg), timeout=30)
         if r.status_code == 200 and r.content:
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             with open(dest_path, "wb") as f:
@@ -87,6 +93,7 @@ def paginate(cfg, item_type):
     limit = 100
     while True:
         data = api_get(cfg, "/Items", {
+            "UserId": cfg["user_id"],
             "IncludeItemTypes": item_type,
             "Recursive": "true",
             "StartIndex": start_index,

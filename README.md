@@ -63,8 +63,9 @@ build_all.py          runs all of the above in order
 - `library.json` is a cache (`source of truth`) — posters already downloaded are
   skipped on re-runs; use `--force` to re-fetch.
 - Before each fetch, `build_all.py` snapshots the current library to
-  `library.prev.json` and then generates `output/new_cards.pdf` containing only
-  the newly added movies (see [Updating](#updating-the-catalog)).
+  `library.prev.json` and then generates `output/new_cards_YYYYMMDD_NN.pdf`
+  (date-stamped, per-day run number) containing only the newly added movies
+  (see [Updating](#updating-the-catalog)).
 
 ## Output files (current library size)
 
@@ -90,7 +91,7 @@ python3 fetch_library.py --movies-only        # --tv-only: fetch one kind
 # Cards
 python3 generate_cards.py                     # movies.pdf + tv_series.pdf
 python3 generate_cards.py --preview 2         # first 2 pages (sanity check)
-python3 generate_cards.py --new-only          # only new_cards.pdf (delta)
+python3 generate_cards.py --new-only          # only new_cards_* delta PDF
 python3 generate_cards.py --movies-only       # --tv-only: cards for one kind
 
 # Indexes
@@ -174,10 +175,10 @@ python3 build_all.py
 ```
 
 This re-fetches, rebuilds the pages, and produces a delta sheet
-(`new_cards.pdf`) containing only the newly added movies. Print the new cards,
-cut them, and slot them into their alphabetical positions — you never reprint
-pages that have shifted. The indexes stay accurate without any page-number
-updates. Cover aficionados can generate a fresh cover with
+(`new_cards_YYYYMMDD_NN.pdf`) containing only the newly added movies. Print the
+new cards, cut them, and slot them into their alphabetical positions — you never
+reprint pages that have shifted. The indexes stay accurate without any
+page-number updates. Cover aficionados can generate a fresh cover with
 `python3 generate_cover.py` and pick the seed they like best.
 
 ## Project layout
@@ -186,7 +187,7 @@ updates. Cover aficionados can generate a fresh cover with
 jellyfin-catalog/
 ├── build_all.py            # master script: fetch → cards → index → cover → delta
 ├── fetch_library.py        # Jellyfin API → library.json + posters/
-├── generate_cards.py       # library.json → movies.pdf, tv_series.pdf, new_cards.pdf
+├── generate_cards.py       # library.json → movies.pdf, tv_series.pdf, new_cards_*.pdf
 ├── generate_index.py       # library.json → title_index.pdf, genre_index.pdf
 ├── generate_cover.py       # library.json → cover-<seed>.pdf
 ├── config.json             # server URL, API key, genre colors, cover exclusions

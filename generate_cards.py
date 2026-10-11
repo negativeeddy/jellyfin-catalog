@@ -11,6 +11,7 @@ Pipeline (fast, memory-safe):
 """
 
 import argparse
+import datetime
 import json
 import os
 import shutil
@@ -268,6 +269,20 @@ def new_records_since_baseline(library):
     return new_movies, new_series
 
 
+def next_new_cards_path(outdir):
+    """Build a unique delta filename: new_cards_YYYYMMDD_<run>.pdf (run resets daily)."""
+    today = datetime.date.today().strftime("%Y%m%d")
+    prefix = f"new_cards_{today}_"
+    run = 1
+    for f in os.listdir(outdir):
+        if f.startswith(prefix) and f.endswith(".pdf"):
+            try:
+                run = max(run, int(f[len(prefix):-len(".pdf")]) + 1)
+            except ValueError:
+                pass
+    return os.path.join(outdir, f"new_cards_{today}_{run:02d}.pdf")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate card PDFs from library.json")
     parser.add_argument("--movies-only", action="store_true")
@@ -297,7 +312,7 @@ def main():
             print(f"      - [TV] {s['name']} ({s['year']})")
         records = sorted(new_movies, key=lambda m: m["name"].lower()) + \
                   sorted(new_series, key=lambda s: s["name"].lower())
-        build_pages(cfg, renderer, records, os.path.join(outdir, "new_cards.pdf"),
+        build_pages(cfg, renderer, records, next_new_cards_path(outdir),
                     label="new_cards")
         return
 
