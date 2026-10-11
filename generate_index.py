@@ -19,6 +19,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen import canvas
 
+from sorting import title_section, title_sort_key
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 LIBRARY_PATH = os.path.join(BASE_DIR, "library.json")
@@ -149,18 +151,16 @@ class IndexWriter:
 
 
 def build_title_index(cfg, movies, out_path):
-    sorted_movies = sorted(movies, key=lambda m: m["name"].lower())
+    sorted_movies = sorted(movies, key=lambda m: title_sort_key(m["name"]))
 
     groups = defaultdict(list)
     for m in sorted_movies:
-        name = m["name"]
-        first = name[0].upper() if name and name[0].isalpha() else "#"
-        groups[first].append(m)
+        groups[title_section(m["name"])].append(m)
 
     w = IndexWriter(out_path, "Title Index")
     for letter in sorted(groups.keys(), key=lambda L: (L == "#", L)):
         entries = sorted(((m["name"], m["year"]) for m in groups[letter]),
-                         key=lambda e: e[0].lower())
+                         key=lambda e: title_sort_key(e[0]))
         w.draw_section(f"{letter}", "#1a1a1a", entries)
     return w.finish()
 
@@ -180,7 +180,7 @@ def build_genre_index(cfg, movies, series, out_path):
     for g in genre_order:
         color = colors.get(g, colors.get("default", "#94A3B8"))
         entries = sorted(((m["name"], m["year"]) for m in genre_movies[g]),
-                         key=lambda e: e[0].lower())
+                         key=lambda e: title_sort_key(e[0]))
         w.draw_section(f"{g} ({len(entries)})", color, entries)
     return w.finish()
 

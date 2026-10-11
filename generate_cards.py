@@ -20,6 +20,8 @@ import tempfile
 
 from PIL import Image, ImageDraw, ImageFont
 
+from sorting import title_sort_key
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 LIBRARY_PATH = os.path.join(BASE_DIR, "library.json")
@@ -310,8 +312,8 @@ def main():
             print(f"      - {m['name']} ({m['year']})")
         for s in new_series:
             print(f"      - [TV] {s['name']} ({s['year']})")
-        records = sorted(new_movies, key=lambda m: m["name"].lower()) + \
-                  sorted(new_series, key=lambda s: s["name"].lower())
+        records = sorted(new_movies, key=lambda m: title_sort_key(m["name"])) + \
+                  sorted(new_series, key=lambda s: title_sort_key(s["name"]))
         build_pages(cfg, renderer, records, next_new_cards_path(outdir),
                     label="new_cards")
         return
@@ -320,12 +322,12 @@ def main():
     do_tv = not args.movies_only
 
     if do_movies:
-        movies = sorted(library["movies"], key=lambda m: m["name"].lower())
+        movies = sorted(library["movies"], key=lambda m: title_sort_key(m["name"]))
         build_pages(cfg, renderer, movies, os.path.join(outdir, "movies.pdf"),
                     preview_pages=args.preview, label="movies")
 
     if do_tv:
-        series = sorted(library["tv_series"], key=lambda m: m["name"].lower())
+        series = sorted(library["tv_series"], key=lambda m: title_sort_key(m["name"]))
         build_pages(cfg, renderer, series, os.path.join(outdir, "tv_series.pdf"),
                     preview_pages=args.preview, label="tv_series")
 
