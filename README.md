@@ -92,6 +92,7 @@ python3 fetch_library.py --movies-only        # --tv-only: fetch one kind
 python3 generate_cards.py                     # movies.pdf + tv_series.pdf
 python3 generate_cards.py --preview 2         # first 2 pages (sanity check)
 python3 generate_cards.py --new-only          # only new_cards_* delta PDF
+python3 generate_cards.py --movie-ids id1,id2 # one selected_cards_* sheet, IDs in given order
 python3 generate_cards.py --movies-only       # --tv-only: cards for one kind
 
 # Indexes

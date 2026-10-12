@@ -271,10 +271,10 @@ def new_records_since_baseline(library):
     return new_movies, new_series
 
 
-def next_new_cards_path(outdir):
-    """Build a unique delta filename: new_cards_YYYYMMDD_<run>.pdf (run resets daily)."""
+def next_unique_path(outdir, stem):
+    """Build a unique filename: <stem>_YYYYMMDD_<run>.pdf (run resets daily)."""
     today = datetime.date.today().strftime("%Y%m%d")
-    prefix = f"new_cards_{today}_"
+    prefix = f"{stem}_{today}_"
     run = 1
     for f in os.listdir(outdir):
         if f.startswith(prefix) and f.endswith(".pdf"):
@@ -282,7 +282,11 @@ def next_new_cards_path(outdir):
                 run = max(run, int(f[len(prefix):-len(".pdf")]) + 1)
             except ValueError:
                 pass
-    return os.path.join(outdir, f"new_cards_{today}_{run:02d}.pdf")
+    return os.path.join(outdir, f"{stem}_{today}_{run:02d}.pdf")
+
+
+def next_new_cards_path(outdir):
+    return next_unique_path(outdir, "new_cards")
 
 
 def main():
@@ -292,6 +296,8 @@ def main():
     parser.add_argument("--preview", type=int, metavar="N", help="Generate first N pages (test)")
     parser.add_argument("--new-only", action="store_true",
                         help="Only render cards for movies/series added since the last build")
+    parser.add_argument("--movie-ids", metavar="IDS",
+                        help="Comma-separated movie IDs to render as one sheet (in given order)")
     args = parser.parse_args()
 
     cfg = load_config()
@@ -300,6 +306,23 @@ def main():
 
     outdir = os.path.join(BASE_DIR, cfg["output_dir"])
     os.makedirs(outdir, exist_ok=True)
+
+    if args.movie_ids:
+        wanted = [i.strip() for i in args.movie_ids.split(",") if i.strip()]
+        by_id = {m["id"]: m for m in library["movies"]}
+        records = [by_id[i] for i in wanted if i in by_id]
+        missing = [i for i in wanted if i not in by_id]
+        if missing:
+            print(f"[warn] IDs not found in library.json: {', '.join(missing)}")
+        if not records:
+            print("[error] No matching movies for --movie-ids", file=sys.stderr)
+            sys.exit(1)
+        print(f"[info] {len(records)} movie(s) selected:")
+        for m in records:
+            print(f"      - {m['name']} ({m['year']})")
+        build_pages(cfg, renderer, records, next_unique_path(outdir, "selected_cards"),
+                    label="selected_cards")
+        return
 
     if args.new_only:
         new_movies, new_series = new_records_since_baseline(library)
